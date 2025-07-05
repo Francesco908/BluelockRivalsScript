@@ -1,0 +1,68 @@
+-- ⚠️ Assicurati di usare questo solo in LocalScript (es: StarterPlayerScripts)
+-- ⚠️ Rayfield deve essere già supportato nel tuo gioco (come da source.txt)
+
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
+
+local player = game.Players.LocalPlayer
+local selectedType = "Style"
+local selectedCharacter = "Isagi"
+local currentResult = nil
+
+local Window = Rayfield:CreateWindow({
+	Name = "Blue Lock - Spin Menu",
+	LoadingTitle = "Caricamento...",
+	LoadingSubtitle = "Sistema di Spin Personalizzato",
+	ConfigurationSaving = {
+		Enabled = false
+	}
+})
+
+local SpinTab = Window:CreateTab("🎯 Spins")
+
+-- Dropdown Tipo
+SpinTab:CreateDropdown({
+	Name = "Tipo di Spin",
+	Options = {"Style", "Stile"},
+	CurrentOption = "Style",
+	Callback = function(Option)
+		selectedType = Option
+	end,
+})
+
+-- Dropdown Personaggio
+SpinTab:CreateDropdown({
+	Name = "Scegli Personaggio",
+	Options = {"Isagi", "Nagi", "Rin", "Bachira", "Reo"},
+	CurrentOption = "Isagi",
+	Callback = function(Option)
+		selectedCharacter = Option
+	end,
+})
+
+-- Bottone manuale
+SpinTab:CreateButton({
+	Name = "🎮 Spinna Manualmente",
+	Callback = function()
+		currentResult = selectedCharacter.." ("..selectedType..")"
+		Rayfield:Notify({
+			Title = "Spin Manuale",
+			Content = "Hai ottenuto: "..currentResult,
+			Duration = 6,
+		})
+	end,
+})
+
+-- Bottone automatico
+SpinTab:CreateButton({
+	Name = "🔁 Spin Automatico",
+	Callback = function()
+		local chars = {"Isagi", "Nagi", "Rin", "Bachira", "Reo"}
+		local rng = chars[math.random(1, #chars)]
+		currentResult = rng.." ("..selectedType..")"
+		Rayfield:Notify({
+			Title = "Spin Automatico",
+			Content = "Hai ottenuto: "..currentResult,
+			Duration = 6,
+		})
+	end,
+})
