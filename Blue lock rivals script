@@ -1,66 +1,61 @@
 -- ⚠️ Assicurati di usare questo solo in LocalScript (es: StarterPlayerScripts)
--- ⚠️ Script testato con Rayfield ufficiale
+-- ⚠️ Blue Lock Script - ProfileStats Edition - FIXED
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local success, Rayfield = pcall(function()
+    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+end)
+
+if not success then
+    warn("Errore caricamento Rayfield, provo backup...")
+    Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/UI-Interface/CustomFIeld/main/RayField.lua'))()
+end
+
 local player = game.Players.LocalPlayer
+local profileStats = nil
 
--- DEBUG: Stampiamo tutto per trovare dove sono i valori
-print("=== DEBUG INFO ===")
-print("Player:", player.Name)
-
--- Cerchiamo PlayerStats in diverse posizioni
-local stats = nil
-local possibleLocations = {
-    player:FindFirstChild("PlayerStats"),
-    player:FindFirstChild("leaderstats"),
-    player:FindFirstChild("Stats"),
-    player.Character and player.Character:FindFirstChild("PlayerStats"),
-    player.Character and player.Character:FindFirstChild("Stats"),
-    game.Workspace:FindFirstChild(player.Name) and game.Workspace[player.Name]:FindFirstChild("PlayerStats")
-}
-
-for i, location in ipairs(possibleLocations) do
-    if location then
-        print("Trovato stats in posizione", i, ":", location:GetFullName())
-        stats = location
-        break
-    end
-end
-
-if not stats then
-    print("PlayerStats non trovato, cercando in tutte le posizioni...")
-    -- Stampiamo tutti i figli del player
-    print("Figli del Player:")
-    for _, child in ipairs(player:GetChildren()) do
-        print("-", child.Name, child.ClassName)
-    end
+-- Aspetta ProfileStats con timeout
+local function waitForProfileStats()
+    local attempts = 0
+    local maxAttempts = 50
     
-    -- Stampiamo tutti i figli del character se esiste
-    if player.Character then
-        print("Figli del Character:")
-        for _, child in ipairs(player.Character:GetChildren()) do
-            print("-", child.Name, child.ClassName)
+    while attempts < maxAttempts do
+        profileStats = player:FindFirstChild("ProfileStats")
+        if profileStats then
+            break
         end
+        wait(0.1)
+        attempts = attempts + 1
     end
     
-    -- Aspettiamo che appaia
-    repeat
-        wait(0.1)
-        stats = player:FindFirstChild("PlayerStats") or player:FindFirstChild("leaderstats") or player:FindFirstChild("Stats")
-    until stats
+    if not profileStats then
+        warn("ProfileStats non trovato dopo " .. maxAttempts .. " tentativi")
+        return false
+    end
+    
+    return true
 end
 
-print("Stats trovato:", stats:GetFullName())
-print("Contenuto di Stats:")
-for _, child in ipairs(stats:GetChildren()) do
-    print("-", child.Name, "=", child.Value, "(", child.ClassName, ")")
+-- Carica ProfileStats
+if not waitForProfileStats() then
+    -- Crea notifica di errore
+    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+        Text = "❌ ERRORE: ProfileStats non trovato!";
+        Color = Color3.fromRGB(255, 0, 0);
+        Font = Enum.Font.SourceSansBold;
+        FontSize = Enum.FontSize.Size18;
+    })
+    return
+end
+
+print("=== BLUE LOCK DEBUG ===")
+print("ProfileStats trovato:", profileStats:GetFullName())
+print("Contenuto di ProfileStats:")
+for _, child in ipairs(profileStats:GetChildren()) do
+    if child:IsA("IntValue") or child:IsA("NumberValue") then
+        print("-", child.Name, "=", child.Value)
+    end
 end
 print("=== END DEBUG ===")
-
--- Aspetta che PlayerStats sia disponibile
-if not stats then
-    stats = player:WaitForChild("PlayerStats", 10) or player:WaitForChild("leaderstats", 10) or player:WaitForChild("Stats", 10)
-end
 
 -- Salva i valori originali
 local originalValues = {
@@ -71,70 +66,87 @@ local originalValues = {
 
 -- Funzione per salvare i valori originali
 local function saveOriginalValues()
-    local money = findStat("Money")
-    local spins = findStat("Spins")
-    local flowSpins = findStat("FlowSpins")
+    local money = profileStats:FindFirstChild("Money")
+    local spins = profileStats:FindFirstChild("Spins")
+    local flowSpins = profileStats:FindFirstChild("FlowSpins")
     
     if money then originalValues.Money = money.Value end
     if spins then originalValues.Spins = spins.Value end
     if flowSpins then originalValues.FlowSpins = flowSpins.Value end
+    
+    print("Valori originali salvati:", originalValues.Money, originalValues.Spins, originalValues.FlowSpins)
 end
 
 -- Salva i valori all'avvio
 saveOriginalValues()
 
--- Crea la finestra
-local Window = Rayfield:CreateWindow({
-    Name = "Blue Lock - Cheat Menu",
-    LoadingTitle = "Caricamento Blue Lock Cheats...",
-    LoadingSubtitle = "Sistema di Modifica Stats",
-    ConfigurationSaving = {
-        Enabled = false,
-        FolderName = "BlueLockCheats"
-    },
-    Discord = {
-        Enabled = false
-    },
-    KeySystem = false
-})
+-- Variabili per i loop
+local moneyLoop = false
+local spinsLoop = false
+local flowSpinsLoop = false
+
+-- Crea la finestra con error handling
+local Window = nil
+local success2, err = pcall(function()
+    Window = Rayfield:CreateWindow({
+        Name = "Blue Lock - ProfileStats",
+        LoadingTitle = "Caricamento Blue Lock Cheats...",
+        LoadingSubtitle = "Sistema di Modifica ProfileStats",
+        ConfigurationSaving = {
+            Enabled = false,
+            FolderName = "BlueLockCheats"
+        },
+        Discord = {
+            Enabled = false
+        },
+        KeySystem = false
+    })
+end)
+
+if not success2 then
+    warn("Errore creazione finestra:", err)
+    return
+end
 
 -- Crea il tab principale
-local MainTab = Window:CreateTab("⚙️ Stats Modifier", "settings")
+local MainTab = Window:CreateTab("⚙️ Stats Modifier", 4483362458)
 
 -- Sezione Money
 local MoneySection = MainTab:CreateSection("💰 Money")
 
--- Toggle per Money infinito
+-- Toggle per Money infinito con loop
 MainTab:CreateToggle({
     Name = "Unlimited Money",
     CurrentValue = false,
     Flag = "MoneyToggle",
     Callback = function(Value)
-        local money = findStat("Money")
-        if money then
-            if Value then
-                money.Value = 99999999
-                Rayfield:Notify({
-                    Title = "Blue Lock",
-                    Content = "💰 Unlimited Money ATTIVATO",
-                    Duration = 3,
-                    Image = "check"
-                })
-            else
-                money.Value = originalValues.Money
-                Rayfield:Notify({
-                    Title = "Blue Lock",
-                    Content = "💰 Unlimited Money DISATTIVATO",
-                    Duration = 3,
-                    Image = "x"
-                })
-            end
-        else
+        moneyLoop = Value
+        if Value then
+            spawn(function()
+                while moneyLoop do
+                    local money = profileStats:FindFirstChild("Money")
+                    if money then
+                        money.Value = 99999999
+                    end
+                    wait(0.1)
+                end
+            end)
             Rayfield:Notify({
-                Title = "Errore",
-                Content = "❌ Money non trovato! Controlla la console per debug",
-                Duration = 5,
-                Image = "alert-triangle"
+                Title = "Blue Lock",
+                Content = "💰 Unlimited Money ATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            local money = profileStats:FindFirstChild("Money")
+            if money then
+                money.Value = originalValues.Money
+            end
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "💰 Unlimited Money DISATTIVATO",
+                Duration = 3,
+                Image = 4483362458
             })
         end
     end,
@@ -149,14 +161,15 @@ MainTab:CreateSlider({
     CurrentValue = 0,
     Flag = "MoneySlider",
     Callback = function(Value)
-        local money = findStat("Money")
+        local money = profileStats:FindFirstChild("Money")
         if money then
             money.Value = Value
+            print("Money impostato a:", Value)
             Rayfield:Notify({
                 Title = "Blue Lock",
                 Content = "💰 Money impostato a: " .. Value,
                 Duration = 2,
-                Image = "dollar-sign"
+                Image = 4483362458
             })
         end
     end,
@@ -165,37 +178,39 @@ MainTab:CreateSlider({
 -- Sezione Spins
 local SpinSection = MainTab:CreateSection("🎰 Spins")
 
--- Toggle per Spins infiniti
+-- Toggle per Spins infiniti con loop
 MainTab:CreateToggle({
     Name = "Unlimited Spins",
     CurrentValue = false,
     Flag = "SpinsToggle",
     Callback = function(Value)
-        local spins = findStat("Spins")
-        if spins then
-            if Value then
-                spins.Value = 999
-                Rayfield:Notify({
-                    Title = "Blue Lock",
-                    Content = "🎰 Unlimited Spins ATTIVATO",
-                    Duration = 3,
-                    Image = "check"
-                })
-            else
-                spins.Value = originalValues.Spins
-                Rayfield:Notify({
-                    Title = "Blue Lock",
-                    Content = "🎰 Unlimited Spins DISATTIVATO",
-                    Duration = 3,
-                    Image = "x"
-                })
-            end
-        else
+        spinsLoop = Value
+        if Value then
+            spawn(function()
+                while spinsLoop do
+                    local spins = profileStats:FindFirstChild("Spins")
+                    if spins then
+                        spins.Value = 999
+                    end
+                    wait(0.1)
+                end
+            end)
             Rayfield:Notify({
-                Title = "Errore",
-                Content = "❌ Spins non trovato! Controlla la console per debug",
-                Duration = 5,
-                Image = "alert-triangle"
+                Title = "Blue Lock",
+                Content = "🎰 Unlimited Spins ATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            local spins = profileStats:FindFirstChild("Spins")
+            if spins then
+                spins.Value = originalValues.Spins
+            end
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎰 Unlimited Spins DISATTIVATO",
+                Duration = 3,
+                Image = 4483362458
             })
         end
     end,
@@ -210,14 +225,15 @@ MainTab:CreateSlider({
     CurrentValue = 0,
     Flag = "SpinsSlider",
     Callback = function(Value)
-        local spins = findStat("Spins")
+        local spins = profileStats:FindFirstChild("Spins")
         if spins then
             spins.Value = Value
+            print("Spins impostati a:", Value)
             Rayfield:Notify({
                 Title = "Blue Lock",
                 Content = "🎰 Spins impostati a: " .. Value,
                 Duration = 2,
-                Image = "rotate-cw"
+                Image = 4483362458
             })
         end
     end,
@@ -226,37 +242,39 @@ MainTab:CreateSlider({
 -- Sezione Flow Spins
 local FlowSpinSection = MainTab:CreateSection("🌊 Flow Spins")
 
--- Toggle per Flow Spins infiniti
+-- Toggle per Flow Spins infiniti con loop
 MainTab:CreateToggle({
     Name = "Unlimited Flow Spins",
     CurrentValue = false,
     Flag = "FlowSpinsToggle",
     Callback = function(Value)
-        local flowSpins = findStat("FlowSpins")
-        if flowSpins then
-            if Value then
-                flowSpins.Value = 999
-                Rayfield:Notify({
-                    Title = "Blue Lock",
-                    Content = "🌊 Unlimited Flow Spins ATTIVATO",
-                    Duration = 3,
-                    Image = "check"
-                })
-            else
-                flowSpins.Value = originalValues.FlowSpins
-                Rayfield:Notify({
-                    Title = "Blue Lock",
-                    Content = "🌊 Unlimited Flow Spins DISATTIVATO",
-                    Duration = 3,
-                    Image = "x"
-                })
-            end
-        else
+        flowSpinsLoop = Value
+        if Value then
+            spawn(function()
+                while flowSpinsLoop do
+                    local flowSpins = profileStats:FindFirstChild("FlowSpins")
+                    if flowSpins then
+                        flowSpins.Value = 999
+                    end
+                    wait(0.1)
+                end
+            end)
             Rayfield:Notify({
-                Title = "Errore",
-                Content = "❌ FlowSpins non trovato! Controlla la console per debug",
-                Duration = 5,
-                Image = "alert-triangle"
+                Title = "Blue Lock",
+                Content = "🌊 Unlimited Flow Spins ATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            local flowSpins = profileStats:FindFirstChild("FlowSpins")
+            if flowSpins then
+                flowSpins.Value = originalValues.FlowSpins
+            end
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🌊 Unlimited Flow Spins DISATTIVATO",
+                Duration = 3,
+                Image = 4483362458
             })
         end
     end,
@@ -271,14 +289,15 @@ MainTab:CreateSlider({
     CurrentValue = 0,
     Flag = "FlowSpinsSlider",
     Callback = function(Value)
-        local flowSpins = findStat("FlowSpins")
+        local flowSpins = profileStats:FindFirstChild("FlowSpins")
         if flowSpins then
             flowSpins.Value = Value
+            print("FlowSpins impostati a:", Value)
             Rayfield:Notify({
                 Title = "Blue Lock",
                 Content = "🌊 Flow Spins impostati a: " .. Value,
                 Duration = 2,
-                Image = "waves"
+                Image = 4483362458
             })
         end
     end,
@@ -291,23 +310,45 @@ local UtilitySection = MainTab:CreateSection("🔧 Utility")
 MainTab:CreateButton({
     Name = "Reset All Values",
     Callback = function()
+        -- Ferma tutti i loop
+        moneyLoop = false
+        spinsLoop = false
+        flowSpinsLoop = false
+        
+        wait(0.2) -- Aspetta che i loop si fermino
+        
         -- Reset Money
-        local money = findStat("Money")
+        local money = profileStats:FindFirstChild("Money")
         if money then money.Value = originalValues.Money end
         
         -- Reset Spins
-        local spins = findStat("Spins")
+        local spins = profileStats:FindFirstChild("Spins")
         if spins then spins.Value = originalValues.Spins end
         
         -- Reset Flow Spins
-        local flowSpins = findStat("FlowSpins")
+        local flowSpins = profileStats:FindFirstChild("FlowSpins")
         if flowSpins then flowSpins.Value = originalValues.FlowSpins end
         
+        print("Tutti i valori resettati")
         Rayfield:Notify({
             Title = "Blue Lock",
             Content = "🔄 Tutti i valori sono stati resettati!",
             Duration = 3,
-            Image = "refresh-cw"
+            Image = 4483362458
+        })
+    end,
+})
+
+-- Button per aggiornare valori originali
+MainTab:CreateButton({
+    Name = "Update Original Values",
+    Callback = function()
+        saveOriginalValues()
+        Rayfield:Notify({
+            Title = "Blue Lock",
+            Content = "📝 Valori originali aggiornati!",
+            Duration = 3,
+            Image = 4483362458
         })
     end,
 })
@@ -316,27 +357,65 @@ MainTab:CreateButton({
 MainTab:CreateButton({
     Name = "Show Current Stats",
     Callback = function()
-        local money = findStat("Money")
-        local spins = findStat("Spins")
-        local flowSpins = findStat("FlowSpins")
+        local money = profileStats:FindFirstChild("Money")
+        local spins = profileStats:FindFirstChild("Spins")
+        local flowSpins = profileStats:FindFirstChild("FlowSpins")
         
         local moneyVal = money and money.Value or "N/A"
         local spinsVal = spins and spins.Value or "N/A"
         local flowSpinsVal = flowSpins and flowSpins.Value or "N/A"
         
+        print("Stats attuali - Money:", moneyVal, "Spins:", spinsVal, "FlowSpins:", flowSpinsVal)
+        
         Rayfield:Notify({
             Title = "Current Stats",
-            Content = "💰 Money: " .. moneyVal .. "\n🎰 Spins: " .. spinsVal .. "\n🌊 Flow: " .. flowSpinsVal,
+            Content = "💰 Money: " .. moneyVal .. " | 🎰 Spins: " .. spinsVal .. " | 🌊 Flow: " .. flowSpinsVal,
             Duration = 5,
-            Image = "info"
+            Image = 4483362458
         })
     end,
 })
 
+-- Button per debug ProfileStats
+MainTab:CreateButton({
+    Name = "Debug ProfileStats",
+    Callback = function()
+        print("=== DEBUG PROFILESTATS ===")
+        if profileStats then
+            for _, child in ipairs(profileStats:GetChildren()) do
+                if child:IsA("IntValue") or child:IsA("NumberValue") then
+                    print("-", child.Name, "=", child.Value, "(", child.ClassName, ")")
+                end
+            end
+        else
+            print("ProfileStats non trovato!")
+        end
+        print("=== END DEBUG ===")
+        
+        Rayfield:Notify({
+            Title = "Debug",
+            Content = "🔍 Controlla la console per i dettagli",
+            Duration = 3,
+            Image = 4483362458
+        })
+    end,
+})
+
+-- Cleanup quando il giocatore lascia
+game.Players.PlayerRemoving:Connect(function(plr)
+    if plr == player then
+        moneyLoop = false
+        spinsLoop = false
+        flowSpinsLoop = false
+    end
+end)
+
 -- Messaggio di benvenuto
 Rayfield:Notify({
     Title = "Blue Lock Cheats",
-    Content = "✅ Script caricato con successo!",
+    Content = "✅ ProfileStats script caricato e fixato!",
     Duration = 4,
-    Image = "check-circle"
+    Image = 4483362458
 })
+
+print("🔥 Blue Lock Script caricato con successo!")
