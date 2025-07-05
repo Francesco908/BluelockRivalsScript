@@ -4,8 +4,63 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local player = game.Players.LocalPlayer
 
+-- DEBUG: Stampiamo tutto per trovare dove sono i valori
+print("=== DEBUG INFO ===")
+print("Player:", player.Name)
+
+-- Cerchiamo PlayerStats in diverse posizioni
+local stats = nil
+local possibleLocations = {
+    player:FindFirstChild("PlayerStats"),
+    player:FindFirstChild("leaderstats"),
+    player:FindFirstChild("Stats"),
+    player.Character and player.Character:FindFirstChild("PlayerStats"),
+    player.Character and player.Character:FindFirstChild("Stats"),
+    game.Workspace:FindFirstChild(player.Name) and game.Workspace[player.Name]:FindFirstChild("PlayerStats")
+}
+
+for i, location in ipairs(possibleLocations) do
+    if location then
+        print("Trovato stats in posizione", i, ":", location:GetFullName())
+        stats = location
+        break
+    end
+end
+
+if not stats then
+    print("PlayerStats non trovato, cercando in tutte le posizioni...")
+    -- Stampiamo tutti i figli del player
+    print("Figli del Player:")
+    for _, child in ipairs(player:GetChildren()) do
+        print("-", child.Name, child.ClassName)
+    end
+    
+    -- Stampiamo tutti i figli del character se esiste
+    if player.Character then
+        print("Figli del Character:")
+        for _, child in ipairs(player.Character:GetChildren()) do
+            print("-", child.Name, child.ClassName)
+        end
+    end
+    
+    -- Aspettiamo che appaia
+    repeat
+        wait(0.1)
+        stats = player:FindFirstChild("PlayerStats") or player:FindFirstChild("leaderstats") or player:FindFirstChild("Stats")
+    until stats
+end
+
+print("Stats trovato:", stats:GetFullName())
+print("Contenuto di Stats:")
+for _, child in ipairs(stats:GetChildren()) do
+    print("-", child.Name, "=", child.Value, "(", child.ClassName, ")")
+end
+print("=== END DEBUG ===")
+
 -- Aspetta che PlayerStats sia disponibile
-local stats = player:WaitForChild("PlayerStats")
+if not stats then
+    stats = player:WaitForChild("PlayerStats", 10) or player:WaitForChild("leaderstats", 10) or player:WaitForChild("Stats", 10)
+end
 
 -- Salva i valori originali
 local originalValues = {
@@ -16,15 +71,13 @@ local originalValues = {
 
 -- Funzione per salvare i valori originali
 local function saveOriginalValues()
-    if stats:FindFirstChild("Money") then
-        originalValues.Money = stats.Money.Value
-    end
-    if stats:FindFirstChild("Spins") then
-        originalValues.Spins = stats.Spins.Value
-    end
-    if stats:FindFirstChild("FlowSpins") then
-        originalValues.FlowSpins = stats.FlowSpins.Value
-    end
+    local money = findStat("Money")
+    local spins = findStat("Spins")
+    local flowSpins = findStat("FlowSpins")
+    
+    if money then originalValues.Money = money.Value end
+    if spins then originalValues.Spins = spins.Value end
+    if flowSpins then originalValues.FlowSpins = flowSpins.Value end
 end
 
 -- Salva i valori all'avvio
@@ -57,7 +110,7 @@ MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "MoneyToggle",
     Callback = function(Value)
-        local money = stats:FindFirstChild("Money")
+        local money = findStat("Money")
         if money then
             if Value then
                 money.Value = 99999999
@@ -79,7 +132,7 @@ MainTab:CreateToggle({
         else
             Rayfield:Notify({
                 Title = "Errore",
-                Content = "❌ Money non trovato in PlayerStats!",
+                Content = "❌ Money non trovato! Controlla la console per debug",
                 Duration = 5,
                 Image = "alert-triangle"
             })
@@ -96,7 +149,7 @@ MainTab:CreateSlider({
     CurrentValue = 0,
     Flag = "MoneySlider",
     Callback = function(Value)
-        local money = stats:FindFirstChild("Money")
+        local money = findStat("Money")
         if money then
             money.Value = Value
             Rayfield:Notify({
@@ -118,7 +171,7 @@ MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "SpinsToggle",
     Callback = function(Value)
-        local spins = stats:FindFirstChild("Spins")
+        local spins = findStat("Spins")
         if spins then
             if Value then
                 spins.Value = 999
@@ -140,7 +193,7 @@ MainTab:CreateToggle({
         else
             Rayfield:Notify({
                 Title = "Errore",
-                Content = "❌ Spins non trovato in PlayerStats!",
+                Content = "❌ Spins non trovato! Controlla la console per debug",
                 Duration = 5,
                 Image = "alert-triangle"
             })
@@ -157,7 +210,7 @@ MainTab:CreateSlider({
     CurrentValue = 0,
     Flag = "SpinsSlider",
     Callback = function(Value)
-        local spins = stats:FindFirstChild("Spins")
+        local spins = findStat("Spins")
         if spins then
             spins.Value = Value
             Rayfield:Notify({
@@ -179,7 +232,7 @@ MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "FlowSpinsToggle",
     Callback = function(Value)
-        local flowSpins = stats:FindFirstChild("FlowSpins")
+        local flowSpins = findStat("FlowSpins")
         if flowSpins then
             if Value then
                 flowSpins.Value = 999
@@ -201,7 +254,7 @@ MainTab:CreateToggle({
         else
             Rayfield:Notify({
                 Title = "Errore",
-                Content = "❌ FlowSpins non trovato in PlayerStats!",
+                Content = "❌ FlowSpins non trovato! Controlla la console per debug",
                 Duration = 5,
                 Image = "alert-triangle"
             })
@@ -218,7 +271,7 @@ MainTab:CreateSlider({
     CurrentValue = 0,
     Flag = "FlowSpinsSlider",
     Callback = function(Value)
-        local flowSpins = stats:FindFirstChild("FlowSpins")
+        local flowSpins = findStat("FlowSpins")
         if flowSpins then
             flowSpins.Value = Value
             Rayfield:Notify({
@@ -239,15 +292,15 @@ MainTab:CreateButton({
     Name = "Reset All Values",
     Callback = function()
         -- Reset Money
-        local money = stats:FindFirstChild("Money")
+        local money = findStat("Money")
         if money then money.Value = originalValues.Money end
         
         -- Reset Spins
-        local spins = stats:FindFirstChild("Spins")
+        local spins = findStat("Spins")
         if spins then spins.Value = originalValues.Spins end
         
         -- Reset Flow Spins
-        local flowSpins = stats:FindFirstChild("FlowSpins")
+        local flowSpins = findStat("FlowSpins")
         if flowSpins then flowSpins.Value = originalValues.FlowSpins end
         
         Rayfield:Notify({
@@ -263,9 +316,9 @@ MainTab:CreateButton({
 MainTab:CreateButton({
     Name = "Show Current Stats",
     Callback = function()
-        local money = stats:FindFirstChild("Money")
-        local spins = stats:FindFirstChild("Spins")
-        local flowSpins = stats:FindFirstChild("FlowSpins")
+        local money = findStat("Money")
+        local spins = findStat("Spins")
+        local flowSpins = findStat("FlowSpins")
         
         local moneyVal = money and money.Value or "N/A"
         local spinsVal = spins and spins.Value or "N/A"
