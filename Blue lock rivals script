@@ -1,103 +1,289 @@
 -- ⚠️ Assicurati di usare questo solo in LocalScript (es: StarterPlayerScripts)
--- ⚠️ Rayfield deve essere già supportato nel tuo gioco (come da source.txt)
+-- ⚠️ Script testato con Rayfield ufficiale
 
-local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
-
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local player = game.Players.LocalPlayer
+
+-- Aspetta che PlayerStats sia disponibile
 local stats = player:WaitForChild("PlayerStats")
 
+-- Salva i valori originali
+local originalValues = {
+    Money = 0,
+    Spins = 0,
+    FlowSpins = 0
+}
+
+-- Funzione per salvare i valori originali
+local function saveOriginalValues()
+    if stats:FindFirstChild("Money") then
+        originalValues.Money = stats.Money.Value
+    end
+    if stats:FindFirstChild("Spins") then
+        originalValues.Spins = stats.Spins.Value
+    end
+    if stats:FindFirstChild("FlowSpins") then
+        originalValues.FlowSpins = stats.FlowSpins.Value
+    end
+end
+
+-- Salva i valori all'avvio
+saveOriginalValues()
+
+-- Crea la finestra
 local Window = Rayfield:CreateWindow({
-	Name = "Blue Lock - Spin Menu",
-	LoadingTitle = "Caricamento...",
-	LoadingSubtitle = "Sistema di Spin Personalizzato",
-	ConfigurationSaving = {
-		Enabled = false
-	}
+    Name = "Blue Lock - Cheat Menu",
+    LoadingTitle = "Caricamento Blue Lock Cheats...",
+    LoadingSubtitle = "Sistema di Modifica Stats",
+    ConfigurationSaving = {
+        Enabled = false,
+        FolderName = "BlueLockCheats"
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
 })
 
-local SpinTab = Window:CreateTab("⚙️ Cheat Toggles")
+-- Crea il tab principale
+local MainTab = Window:CreateTab("⚙️ Stats Modifier", "settings")
 
--- Funzioni per settare o resettare i valori
-local function setMoney(enabled)
-	local money = stats:FindFirstChild("Money")
-	if money then
-		if enabled then
-			money.Value = 9999999999
-		else
-			money.Value = 0
-		end
-	else
-		warn("Money non trovato in PlayerStats")
-	end
-end
+-- Sezione Money
+local MoneySection = MainTab:CreateSection("💰 Money")
 
-local function setSpins(enabled)
-	local spins = stats:FindFirstChild("Spins")
-	if spins then
-		if enabled then
-			spins.Value = 999
-		else
-			spins.Value = 0
-		end
-	else
-		warn("Spins non trovato in PlayerStats")
-	end
-end
-
-local function setFlowSpins(enabled)
-	local flowSpins = stats:FindFirstChild("FlowSpins")
-	if flowSpins then
-		if enabled then
-			flowSpins.Value = 999
-		else
-			flowSpins.Value = 0
-		end
-	else
-		warn("FlowSpins non trovato in PlayerStats")
-	end
-end
-
--- Switch Money
-SpinTab:CreateToggle({
-	Name = "Unlimited Money",
-	CurrentValue = false,
-	Callback = function(value)
-		setMoney(value)
-		local status = value and "attivato" or "disattivato"
-		Rayfield:Notify({
-			Title = "Blue Lock",
-			Content = "Unlimited Money "..status,
-			Duration = 3,
-		})
-	end,
+-- Toggle per Money infinito
+MainTab:CreateToggle({
+    Name = "Unlimited Money",
+    CurrentValue = false,
+    Flag = "MoneyToggle",
+    Callback = function(Value)
+        local money = stats:FindFirstChild("Money")
+        if money then
+            if Value then
+                money.Value = 99999999
+                Rayfield:Notify({
+                    Title = "Blue Lock",
+                    Content = "💰 Unlimited Money ATTIVATO",
+                    Duration = 3,
+                    Image = "check"
+                })
+            else
+                money.Value = originalValues.Money
+                Rayfield:Notify({
+                    Title = "Blue Lock",
+                    Content = "💰 Unlimited Money DISATTIVATO",
+                    Duration = 3,
+                    Image = "x"
+                })
+            end
+        else
+            Rayfield:Notify({
+                Title = "Errore",
+                Content = "❌ Money non trovato in PlayerStats!",
+                Duration = 5,
+                Image = "alert-triangle"
+            })
+        end
+    end,
 })
 
--- Switch Spins
-SpinTab:CreateToggle({
-	Name = "Unlimited Spins",
-	CurrentValue = false,
-	Callback = function(value)
-		setSpins(value)
-		local status = value and "attivato" or "disattivato"
-		Rayfield:Notify({
-			Title = "Blue Lock",
-			Content = "Unlimited Spins "..status,
-			Duration = 3,
-		})
-	end,
+-- Slider per Money personalizzato
+MainTab:CreateSlider({
+    Name = "Custom Money Amount",
+    Range = {0, 100000000},
+    Increment = 1000,
+    Suffix = "$",
+    CurrentValue = 0,
+    Flag = "MoneySlider",
+    Callback = function(Value)
+        local money = stats:FindFirstChild("Money")
+        if money then
+            money.Value = Value
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "💰 Money impostato a: " .. Value,
+                Duration = 2,
+                Image = "dollar-sign"
+            })
+        end
+    end,
 })
 
--- Switch FlowSpins
-SpinTab:CreateToggle({
-	Name = "Unlimited Flow Spins",
-	CurrentValue = false,
-	Callback = function(value)
-		setFlowSpins(value)
-		local status = value and "attivato" or "disattivato"
-		Rayfield:Notify({
-			Title = "Blue Lock",
-			Content = "Unlimited Flow Spins "..status,
-			Duration = 3,
-		})
-	end,
+-- Sezione Spins
+local SpinSection = MainTab:CreateSection("🎰 Spins")
+
+-- Toggle per Spins infiniti
+MainTab:CreateToggle({
+    Name = "Unlimited Spins",
+    CurrentValue = false,
+    Flag = "SpinsToggle",
+    Callback = function(Value)
+        local spins = stats:FindFirstChild("Spins")
+        if spins then
+            if Value then
+                spins.Value = 999
+                Rayfield:Notify({
+                    Title = "Blue Lock",
+                    Content = "🎰 Unlimited Spins ATTIVATO",
+                    Duration = 3,
+                    Image = "check"
+                })
+            else
+                spins.Value = originalValues.Spins
+                Rayfield:Notify({
+                    Title = "Blue Lock",
+                    Content = "🎰 Unlimited Spins DISATTIVATO",
+                    Duration = 3,
+                    Image = "x"
+                })
+            end
+        else
+            Rayfield:Notify({
+                Title = "Errore",
+                Content = "❌ Spins non trovato in PlayerStats!",
+                Duration = 5,
+                Image = "alert-triangle"
+            })
+        end
+    end,
+})
+
+-- Slider per Spins personalizzati
+MainTab:CreateSlider({
+    Name = "Custom Spins Amount",
+    Range = {0, 1000},
+    Increment = 1,
+    Suffix = " spins",
+    CurrentValue = 0,
+    Flag = "SpinsSlider",
+    Callback = function(Value)
+        local spins = stats:FindFirstChild("Spins")
+        if spins then
+            spins.Value = Value
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎰 Spins impostati a: " .. Value,
+                Duration = 2,
+                Image = "rotate-cw"
+            })
+        end
+    end,
+})
+
+-- Sezione Flow Spins
+local FlowSpinSection = MainTab:CreateSection("🌊 Flow Spins")
+
+-- Toggle per Flow Spins infiniti
+MainTab:CreateToggle({
+    Name = "Unlimited Flow Spins",
+    CurrentValue = false,
+    Flag = "FlowSpinsToggle",
+    Callback = function(Value)
+        local flowSpins = stats:FindFirstChild("FlowSpins")
+        if flowSpins then
+            if Value then
+                flowSpins.Value = 999
+                Rayfield:Notify({
+                    Title = "Blue Lock",
+                    Content = "🌊 Unlimited Flow Spins ATTIVATO",
+                    Duration = 3,
+                    Image = "check"
+                })
+            else
+                flowSpins.Value = originalValues.FlowSpins
+                Rayfield:Notify({
+                    Title = "Blue Lock",
+                    Content = "🌊 Unlimited Flow Spins DISATTIVATO",
+                    Duration = 3,
+                    Image = "x"
+                })
+            end
+        else
+            Rayfield:Notify({
+                Title = "Errore",
+                Content = "❌ FlowSpins non trovato in PlayerStats!",
+                Duration = 5,
+                Image = "alert-triangle"
+            })
+        end
+    end,
+})
+
+-- Slider per Flow Spins personalizzati
+MainTab:CreateSlider({
+    Name = "Custom Flow Spins Amount",
+    Range = {0, 1000},
+    Increment = 1,
+    Suffix = " flow spins",
+    CurrentValue = 0,
+    Flag = "FlowSpinsSlider",
+    Callback = function(Value)
+        local flowSpins = stats:FindFirstChild("FlowSpins")
+        if flowSpins then
+            flowSpins.Value = Value
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🌊 Flow Spins impostati a: " .. Value,
+                Duration = 2,
+                Image = "waves"
+            })
+        end
+    end,
+})
+
+-- Sezione Utilità
+local UtilitySection = MainTab:CreateSection("🔧 Utility")
+
+-- Button per resettare tutto
+MainTab:CreateButton({
+    Name = "Reset All Values",
+    Callback = function()
+        -- Reset Money
+        local money = stats:FindFirstChild("Money")
+        if money then money.Value = originalValues.Money end
+        
+        -- Reset Spins
+        local spins = stats:FindFirstChild("Spins")
+        if spins then spins.Value = originalValues.Spins end
+        
+        -- Reset Flow Spins
+        local flowSpins = stats:FindFirstChild("FlowSpins")
+        if flowSpins then flowSpins.Value = originalValues.FlowSpins end
+        
+        Rayfield:Notify({
+            Title = "Blue Lock",
+            Content = "🔄 Tutti i valori sono stati resettati!",
+            Duration = 3,
+            Image = "refresh-cw"
+        })
+    end,
+})
+
+-- Button per info
+MainTab:CreateButton({
+    Name = "Show Current Stats",
+    Callback = function()
+        local money = stats:FindFirstChild("Money")
+        local spins = stats:FindFirstChild("Spins")
+        local flowSpins = stats:FindFirstChild("FlowSpins")
+        
+        local moneyVal = money and money.Value or "N/A"
+        local spinsVal = spins and spins.Value or "N/A"
+        local flowSpinsVal = flowSpins and flowSpins.Value or "N/A"
+        
+        Rayfield:Notify({
+            Title = "Current Stats",
+            Content = "💰 Money: " .. moneyVal .. "\n🎰 Spins: " .. spinsVal .. "\n🌊 Flow: " .. flowSpinsVal,
+            Duration = 5,
+            Image = "info"
+        })
+    end,
+})
+
+-- Messaggio di benvenuto
+Rayfield:Notify({
+    Title = "Blue Lock Cheats",
+    Content = "✅ Script caricato con successo!",
+    Duration = 4,
+    Image = "check-circle"
 })
