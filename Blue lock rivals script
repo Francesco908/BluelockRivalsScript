@@ -1,5 +1,5 @@
 -- ⚠️ Assicurati di usare questo solo in LocalScript (es: StarterPlayerScripts)
--- ⚠️ Blue Lock Script - ProfileStats Edition - FIXED
+-- ⚠️ Blue Lock Script - ProfileStats Edition - FIXED WITH STYLE & LEVEL
 
 local success, Rayfield = pcall(function()
     return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
@@ -103,6 +103,7 @@ local originalValues = {
     Money = 0,
     Spins = 0,
     FlowSpins = 0,
+    Level = 0,
     Stamina = 0,
     Style = 0
 }
@@ -112,16 +113,18 @@ local function saveOriginalValues()
     local money = profileStats:FindFirstChild("Money")
     local spins = profileStats:FindFirstChild("Spins")
     local flowSpins = profileStats:FindFirstChild("FlowSpins")
+    local level = profileStats:FindFirstChild("Level")
     local stamina = playerStats:FindFirstChild("Stamina")
     local style = playerStats:FindFirstChild("Style")
     
     if money then originalValues.Money = money.Value end
     if spins then originalValues.Spins = spins.Value end
     if flowSpins then originalValues.FlowSpins = flowSpins.Value end
+    if level then originalValues.Level = level.Value end
     if stamina then originalValues.Stamina = stamina.Value end
     if style then originalValues.Style = style.Value end
     
-    print("Valori originali salvati:", originalValues.Money, originalValues.Spins, originalValues.FlowSpins, originalValues.Stamina, originalValues.Style)
+    print("Valori originali salvati:", originalValues.Money, originalValues.Spins, originalValues.FlowSpins, originalValues.Level, originalValues.Stamina, originalValues.Style)
 end
 
 -- Salva i valori all'avvio
@@ -131,14 +134,18 @@ saveOriginalValues()
 local moneyLoop = false
 local spinsLoop = false
 local flowSpinsLoop = false
+local levelLoop = false
+local staminaLoop = false
+local styleLoop = false
+local currentStyleValue = 0
 
 -- Crea la finestra con error handling
 local Window = nil
 local success2, err = pcall(function()
     Window = Rayfield:CreateWindow({
-        Name = "Blue Lock - ProfileStats",
+        Name = "Blue Lock - ProfileStats FIXED",
         LoadingTitle = "Caricamento Blue Lock Cheats...",
-        LoadingSubtitle = "Sistema di Modifica ProfileStats",
+        LoadingSubtitle = "Sistema di Modifica ProfileStats + Style & Level",
         ConfigurationSaving = {
             Enabled = false,
             FolderName = "BlueLockCheats"
@@ -215,6 +222,70 @@ MainTab:CreateSlider({
             Rayfield:Notify({
                 Title = "Blue Lock",
                 Content = "💰 Money impostato a: " .. Value,
+                Duration = 2,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Sezione Level
+local LevelSection = MainTab:CreateSection("🆙 Level")
+
+-- Toggle per Level infinito con loop
+MainTab:CreateToggle({
+    Name = "Unlimited Level",
+    CurrentValue = false,
+    Flag = "LevelToggle",
+    Callback = function(Value)
+        levelLoop = Value
+        if Value then
+            spawn(function()
+                while levelLoop do
+                    local level = profileStats:FindFirstChild("Level")
+                    if level then
+                        level.Value = 999
+                    end
+                    wait(0.1)
+                end
+            end)
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🆙 Unlimited Level ATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            local level = profileStats:FindFirstChild("Level")
+            if level then
+                level.Value = originalValues.Level
+            end
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🆙 Unlimited Level DISATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Slider per Level personalizzato
+MainTab:CreateSlider({
+    Name = "Custom Level Amount",
+    Range = {1, 999},
+    Increment = 1,
+    Suffix = " lvl",
+    CurrentValue = 1,
+    Flag = "LevelSlider",
+    Callback = function(Value)
+        local level = profileStats:FindFirstChild("Level")
+        if level then
+            level.Value = Value
+            print("Level impostato a:", Value)
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🆙 Level impostato a: " .. Value,
                 Duration = 2,
                 Image = 4483362458
             })
@@ -362,7 +433,7 @@ OtherTab:CreateToggle({
     CurrentValue = false,
     Flag = "StaminaToggle",
     Callback = function(Value)
-        local staminaLoop = Value
+        staminaLoop = Value
         if Value then
             spawn(function()
                 while staminaLoop and playerStats do
@@ -394,10 +465,44 @@ OtherTab:CreateToggle({
     end,
 })
 
--- Sezione Style
-local StyleSection = OtherTab:CreateSection("🎨 Style Changer")
+-- Sezione Style - FIXED VERSION
+local StyleSection = OtherTab:CreateSection("🎨 Style Changer - FIXED")
 
--- Dropdown per Style
+-- Toggle per mantenere lo Style attivo
+OtherTab:CreateToggle({
+    Name = "Keep Style Active",
+    CurrentValue = false,
+    Flag = "StyleKeepToggle",
+    Callback = function(Value)
+        styleLoop = Value
+        if Value then
+            spawn(function()
+                while styleLoop and playerStats do
+                    local style = playerStats:FindFirstChild("Style")
+                    if style then
+                        style.Value = currentStyleValue
+                    end
+                    wait(0.1)
+                end
+            end)
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style Lock ATTIVATO - Lo style rimarrà fisso!",
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style Lock DISATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Dropdown per Style - FIXED
 OtherTab:CreateDropdown({
     Name = "Select Style",
     Options = {"Default", "Sae", "NEL Isagi", "Kaiser", "Don Lorenzo", "NEL Rin", "Loki"},
@@ -425,12 +530,13 @@ OtherTab:CreateDropdown({
                 styleValue = 0 -- Default
             end
             
+            currentStyleValue = styleValue
             style.Value = styleValue
             print("Style cambiato a:", Option, "- Valore:", styleValue)
             
             Rayfield:Notify({
                 Title = "Blue Lock",
-                Content = "🎨 Style cambiato a: " .. Option,
+                Content = "🎨 Style cambiato a: " .. Option .. " (Valore: " .. styleValue .. ")",
                 Duration = 3,
                 Image = 4483362458
             })
@@ -439,6 +545,30 @@ OtherTab:CreateDropdown({
                 Title = "Errore",
                 Content = "❌ Style non trovato in PlayerStats!",
                 Duration = 5,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Slider per Style personalizzato
+OtherTab:CreateSlider({
+    Name = "Custom Style Value",
+    Range = {0, 20},
+    Increment = 1,
+    Suffix = " style",
+    CurrentValue = 0,
+    Flag = "StyleSlider",
+    Callback = function(Value)
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = Value
+            style.Value = Value
+            print("Style impostato a valore:", Value)
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style impostato a valore: " .. Value,
+                Duration = 2,
                 Image = 4483362458
             })
         end
@@ -461,7 +591,7 @@ OtherTab:CreateButton({
                 [6] = "Loki"
             }
             
-            local currentStyle = styleNames[style.Value] or "Sconosciuto"
+            local currentStyle = styleNames[style.Value] or "Sconosciuto (Valore: " .. style.Value .. ")"
             print("Style attuale:", currentStyle, "- Valore:", style.Value)
             
             Rayfield:Notify({
@@ -492,6 +622,9 @@ MainTab:CreateButton({
         moneyLoop = false
         spinsLoop = false
         flowSpinsLoop = false
+        levelLoop = false
+        staminaLoop = false
+        styleLoop = false
         
         wait(0.2) -- Aspetta che i loop si fermino
         
@@ -506,6 +639,20 @@ MainTab:CreateButton({
         -- Reset Flow Spins
         local flowSpins = profileStats:FindFirstChild("FlowSpins")
         if flowSpins then flowSpins.Value = originalValues.FlowSpins end
+        
+        -- Reset Level
+        local level = profileStats:FindFirstChild("Level")
+        if level then level.Value = originalValues.Level end
+        
+        -- Reset Stamina
+        local stamina = playerStats:FindFirstChild("Stamina")
+        if stamina then stamina.Value = originalValues.Stamina end
+        
+        -- Reset Style
+        local style = playerStats:FindFirstChild("Style")
+        if style then style.Value = originalValues.Style end
+        
+        currentStyleValue = originalValues.Style
         
         print("Tutti i valori resettati")
         Rayfield:Notify({
@@ -538,16 +685,22 @@ MainTab:CreateButton({
         local money = profileStats:FindFirstChild("Money")
         local spins = profileStats:FindFirstChild("Spins")
         local flowSpins = profileStats:FindFirstChild("FlowSpins")
+        local level = profileStats:FindFirstChild("Level")
+        local stamina = playerStats:FindFirstChild("Stamina")
+        local style = playerStats:FindFirstChild("Style")
         
         local moneyVal = money and money.Value or "N/A"
         local spinsVal = spins and spins.Value or "N/A"
         local flowSpinsVal = flowSpins and flowSpins.Value or "N/A"
+        local levelVal = level and level.Value or "N/A"
+        local staminaVal = stamina and stamina.Value or "N/A"
+        local styleVal = style and style.Value or "N/A"
         
-        print("Stats attuali - Money:", moneyVal, "Spins:", spinsVal, "FlowSpins:", flowSpinsVal)
+        print("Stats attuali - Money:", moneyVal, "Spins:", spinsVal, "FlowSpins:", flowSpinsVal, "Level:", levelVal, "Stamina:", staminaVal, "Style:", styleVal)
         
         Rayfield:Notify({
             Title = "Current Stats",
-            Content = "💰 Money: " .. moneyVal .. " | 🎰 Spins: " .. spinsVal .. " | 🌊 Flow: " .. flowSpinsVal,
+            Content = "💰 Money: " .. moneyVal .. " | 🎰 Spins: " .. spinsVal .. " | 🌊 Flow: " .. flowSpinsVal .. " | 🆙 Level: " .. levelVal,
             Duration = 5,
             Image = 4483362458
         })
@@ -581,23 +734,14 @@ MainTab:CreateButton({
 
 -- Debug per Other tab
 OtherTab:CreateButton({
-    Name = "Debug Stamina & Style",
+    Name = "Debug PlayerStats",
     Callback = function()
-        print("=== DEBUG OTHER STATS ===")
+        print("=== DEBUG PLAYERSTATS ===")
         if playerStats then
-            local stamina = playerStats:FindFirstChild("Stamina")
-            local style = playerStats:FindFirstChild("Style")
-            
-            if stamina then
-                print("- Stamina =", stamina.Value)
-            else
-                print("- Stamina: NON TROVATA")
-            end
-            
-            if style then
-                print("- Style =", style.Value)
-            else
-                print("- Style: NON TROVATA")
+            for _, child in ipairs(playerStats:GetChildren()) do
+                if child:IsA("IntValue") or child:IsA("NumberValue") then
+                    print("-", child.Name, "=", child.Value, "(", child.ClassName, ")")
+                end
             end
         else
             print("PlayerStats non trovato!")
@@ -605,8 +749,8 @@ OtherTab:CreateButton({
         print("=== END DEBUG ===")
         
         Rayfield:Notify({
-            Title = "Debug Other",
-            Content = "🔍 Controlla la console per Stamina & Style",
+            Title = "Debug PlayerStats",
+            Content = "🔍 Controlla la console per tutti i PlayerStats",
             Duration = 3,
             Image = 4483362458
         })
@@ -619,15 +763,18 @@ game.Players.PlayerRemoving:Connect(function(plr)
         moneyLoop = false
         spinsLoop = false
         flowSpinsLoop = false
+        levelLoop = false
+        staminaLoop = false
+        styleLoop = false
     end
 end)
 
 -- Messaggio di benvenuto
 Rayfield:Notify({
-    Title = "Blue Lock Cheats",
-    Content = "✅ ProfileStats script caricato e fixato!",
+    Title = "Blue Lock Cheats FIXED",
+    Content = "✅ Script caricato con Style & Level funzionanti!",
     Duration = 4,
     Image = 4483362458
 })
 
-print("🔥 Blue Lock Script caricato con successo!")
+print("🔥 Blue Lock Script FIXED caricato con successo!")
