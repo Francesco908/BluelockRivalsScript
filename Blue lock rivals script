@@ -15,38 +15,89 @@ local Window = Rayfield:CreateWindow({
 	}
 })
 
--- Appena il GUI si crea, modifico subito i valori
-local function setUnlimitedStats()
-	-- Money
+local SpinTab = Window:CreateTab("⚙️ Cheat Toggles")
+
+-- Funzioni per settare o resettare i valori
+local function setMoney(enabled)
 	local money = stats:FindFirstChild("Money")
 	if money then
-		money.Value = 9999999999
+		if enabled then
+			money.Value = 9999999999
+		else
+			money.Value = 0
+		end
 	else
 		warn("Money non trovato in PlayerStats")
 	end
+end
 
-	-- Spins
+local function setSpins(enabled)
 	local spins = stats:FindFirstChild("Spins")
 	if spins then
-		spins.Value = 999
+		if enabled then
+			spins.Value = 999
+		else
+			spins.Value = 0
+		end
 	else
 		warn("Spins non trovato in PlayerStats")
 	end
+end
 
-	-- FlowSpins
+local function setFlowSpins(enabled)
 	local flowSpins = stats:FindFirstChild("FlowSpins")
 	if flowSpins then
-		flowSpins.Value = 999
+		if enabled then
+			flowSpins.Value = 999
+		else
+			flowSpins.Value = 0
+		end
 	else
 		warn("FlowSpins non trovato in PlayerStats")
 	end
 end
 
-setUnlimitedStats()
+-- Switch Money
+SpinTab:CreateToggle({
+	Name = "Unlimited Money",
+	CurrentValue = false,
+	Callback = function(value)
+		setMoney(value)
+		local status = value and "attivato" or "disattivato"
+		Rayfield:Notify({
+			Title = "Blue Lock",
+			Content = "Unlimited Money "..status,
+			Duration = 3,
+		})
+	end,
+})
 
--- Facoltativo: notifica che i valori sono stati modificati
-Rayfield:Notify({
-	Title = "Blue Lock",
-	Content = "Money, Spins e FlowSpins aggiornati a valori illimitati!",
-	Duration = 5,
+-- Switch Spins
+SpinTab:CreateToggle({
+	Name = "Unlimited Spins",
+	CurrentValue = false,
+	Callback = function(value)
+		setSpins(value)
+		local status = value and "attivato" or "disattivato"
+		Rayfield:Notify({
+			Title = "Blue Lock",
+			Content = "Unlimited Spins "..status,
+			Duration = 3,
+		})
+	end,
+})
+
+-- Switch FlowSpins
+SpinTab:CreateToggle({
+	Name = "Unlimited Flow Spins",
+	CurrentValue = false,
+	Callback = function(value)
+		setFlowSpins(value)
+		local status = value and "attivato" or "disattivato"
+		Rayfield:Notify({
+			Title = "Blue Lock",
+			Content = "Unlimited Flow Spins "..status,
+			Duration = 3,
+		})
+	end,
 })
