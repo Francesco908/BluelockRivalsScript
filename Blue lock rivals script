@@ -398,35 +398,6 @@ OtherTab:CreateToggle({
 })
 
 -- Sezione Style - STRING VERSION
--- Dropdown per selezionare lo Style
-OtherTab:CreateDropdown({
-    Name = "Select Style",
-    Options = {
-        "Default",
-        "Sae",
-        "NEL Isagi",
-        "Kaiser",
-        "Don Lorenzo",
-        "NEL Rin",
-        "Loki"
-    },
-    CurrentOption = "Default",
-    Flag = "StyleDropdown",
-    Callback = function(Option)
-        local style = playerStats:FindFirstChild("Style")
-        if style then
-            currentStyleValue = Option
-            style.Value = Option
-            print("Style cambiato a:", Option)
-            Rayfield:Notify({
-                Title = "Blue Lock",
-                Content = "🎨 Style: " .. Option,
-                Duration = 2,
-                Image = 4483362458
-            })
-        end
-    end,
-})
 local StyleSection = OtherTab:CreateSection("🎨 Style Changer - NAMES")
 
 -- Toggle per mantenere lo Style attivo
@@ -457,6 +428,139 @@ OtherTab:CreateToggle({
                 Title = "Blue Lock",
                 Content = "🎨 Style Lock DISATTIVATO",
                 Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per Default Style
+OtherTab:CreateButton({
+    Name = "Select Default Style",
+    Callback = function()
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = "Default"
+            style.Value = "Default"
+            print("Style cambiato a: Default")
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style: Default",
+                Duration = 2,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per Sae Style
+OtherTab:CreateButton({
+    Name = "Select Sae Style",
+    Callback = function()
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = "Sae"
+            style.Value = "Sae"
+            print("Style cambiato a: Sae")
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style: Sae",
+                Duration = 2,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per NEL Isagi Style
+OtherTab:CreateButton({
+    Name = "Select NEL Isagi Style",
+    Callback = function()
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = "NEL Isagi"
+            style.Value = "NEL Isagi"
+            print("Style cambiato a: NEL Isagi")
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style: NEL Isagi",
+                Duration = 2,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per Kaiser Style
+OtherTab:CreateButton({
+    Name = "Select Kaiser Style",
+    Callback = function()
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = "Kaiser"
+            style.Value = "Kaiser"
+            print("Style cambiato a: Kaiser")
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style: Kaiser",
+                Duration = 2,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per Don Lorenzo Style
+OtherTab:CreateButton({
+    Name = "Select Don Lorenzo Style",
+    Callback = function()
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = "Don Lorenzo"
+            style.Value = "Don Lorenzo"
+            print("Style cambiato a: Don Lorenzo")
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style: Don Lorenzo",
+                Duration = 2,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per NEL Rin Style
+OtherTab:CreateButton({
+    Name = "Select NEL Rin Style",
+    Callback = function()
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = "NEL Rin"
+            style.Value = "NEL Rin"
+            print("Style cambiato a: NEL Rin")
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style: NEL Rin",
+                Duration = 2,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per Loki Style
+OtherTab:CreateButton({
+    Name = "Select Loki Style",
+    Callback = function()
+        local style = playerStats:FindFirstChild("Style")
+        if style then
+            currentStyleValue = "Loki"
+            style.Value = "Loki"
+            print("Style cambiato a: Loki")
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style: Loki",
+                Duration = 2,
                 Image = 4483362458
             })
         end
