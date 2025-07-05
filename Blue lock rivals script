@@ -4,9 +4,7 @@
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local player = game.Players.LocalPlayer
-local selectedType = "Style"
-local selectedCharacter = "Isagi"
-local currentResult = nil
+local stats = player:WaitForChild("PlayerStats")
 
 local Window = Rayfield:CreateWindow({
 	Name = "Blue Lock - Spin Menu",
@@ -17,52 +15,38 @@ local Window = Rayfield:CreateWindow({
 	}
 })
 
-local SpinTab = Window:CreateTab("🎯 Spins")
+-- Appena il GUI si crea, modifico subito i valori
+local function setUnlimitedStats()
+	-- Money
+	local money = stats:FindFirstChild("Money")
+	if money then
+		money.Value = 9999999999
+	else
+		warn("Money non trovato in PlayerStats")
+	end
 
--- Dropdown Tipo
-SpinTab:CreateDropdown({
-	Name = "Tipo di Spin",
-	Options = {"Style", "Stile"},
-	CurrentOption = "Style",
-	Callback = function(Option)
-		selectedType = Option
-	end,
-})
+	-- Spins
+	local spins = stats:FindFirstChild("Spins")
+	if spins then
+		spins.Value = 999
+	else
+		warn("Spins non trovato in PlayerStats")
+	end
 
--- Dropdown Personaggio
-SpinTab:CreateDropdown({
-	Name = "Scegli Personaggio",
-	Options = {"Isagi", "Nagi", "Rin", "Bachira", "Reo"},
-	CurrentOption = "Isagi",
-	Callback = function(Option)
-		selectedCharacter = Option
-	end,
-})
+	-- FlowSpins
+	local flowSpins = stats:FindFirstChild("FlowSpins")
+	if flowSpins then
+		flowSpins.Value = 999
+	else
+		warn("FlowSpins non trovato in PlayerStats")
+	end
+end
 
--- Bottone manuale
-SpinTab:CreateButton({
-	Name = "🎮 Spinna Manualmente",
-	Callback = function()
-		currentResult = selectedCharacter.." ("..selectedType..")"
-		Rayfield:Notify({
-			Title = "Spin Manuale",
-			Content = "Hai ottenuto: "..currentResult,
-			Duration = 6,
-		})
-	end,
-})
+setUnlimitedStats()
 
--- Bottone automatico
-SpinTab:CreateButton({
-	Name = "🔁 Spin Automatico",
-	Callback = function()
-		local chars = {"Isagi", "Nagi", "Rin", "Bachira", "Reo"}
-		local rng = chars[math.random(1, #chars)]
-		currentResult = rng.." ("..selectedType..")"
-		Rayfield:Notify({
-			Title = "Spin Automatico",
-			Content = "Hai ottenuto: "..currentResult,
-			Duration = 6,
-		})
-	end,
+-- Facoltativo: notifica che i valori sono stati modificati
+Rayfield:Notify({
+	Title = "Blue Lock",
+	Content = "Money, Spins e FlowSpins aggiornati a valori illimitati!",
+	Duration = 5,
 })
