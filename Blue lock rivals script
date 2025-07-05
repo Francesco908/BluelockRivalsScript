@@ -90,8 +90,8 @@ local Window = nil
 local success2, err = pcall(function()
     Window = Rayfield:CreateWindow({
         Name = "Blue Lock - ProfileStats",
-        LoadingTitle = "loading script...",
-        LoadingSubtitle = "Blue lock rivals script",
+        LoadingTitle = "Caricamento Blue Lock Cheats...",
+        LoadingSubtitle = "Sistema di Modifica ProfileStats",
         ConfigurationSaving = {
             Enabled = false,
             FolderName = "BlueLockCheats"
@@ -303,6 +303,137 @@ MainTab:CreateSlider({
     end,
 })
 
+-- Crea il tab Other
+local OtherTab = Window:CreateTab("⚡ Other", 4483362458)
+
+-- Sezione Stamina
+local StaminaSection = OtherTab:CreateSection("⚡ Stamina")
+
+-- Toggle per Stamina infinita con loop
+OtherTab:CreateToggle({
+    Name = "Unlimited Stamina",
+    CurrentValue = false,
+    Flag = "StaminaToggle",
+    Callback = function(Value)
+        local staminaLoop = Value
+        if Value then
+            spawn(function()
+                while staminaLoop and profileStats do
+                    local stamina = profileStats:FindFirstChild("Stamina")
+                    if stamina then
+                        stamina.Value = 999
+                    end
+                    wait(0.1)
+                end
+            end)
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "⚡ Unlimited Stamina ATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            local stamina = profileStats:FindFirstChild("Stamina")
+            if stamina then
+                stamina.Value = 100 -- Valore normale
+            end
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "⚡ Unlimited Stamina DISATTIVATO",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Sezione Style
+local StyleSection = OtherTab:CreateSection("🎨 Style Changer")
+
+-- Dropdown per Style
+OtherTab:CreateDropdown({
+    Name = "Select Style",
+    Options = {"Default", "Sae", "NEL Isagi", "Kaiser", "Don Lorenzo", "NEL Rin", "Loki"},
+    CurrentOption = "Default",
+    Flag = "StyleDropdown",
+    Callback = function(Option)
+        local style = profileStats:FindFirstChild("Style")
+        if style then
+            local styleValue = 0
+            
+            -- Assegna valori agli stili
+            if Option == "Sae" then
+                styleValue = 1
+            elseif Option == "NEL Isagi" then
+                styleValue = 2
+            elseif Option == "Kaiser" then
+                styleValue = 3
+            elseif Option == "Don Lorenzo" then
+                styleValue = 4
+            elseif Option == "NEL Rin" then
+                styleValue = 5
+            elseif Option == "Loki" then
+                styleValue = 6
+            else
+                styleValue = 0 -- Default
+            end
+            
+            style.Value = styleValue
+            print("Style cambiato a:", Option, "- Valore:", styleValue)
+            
+            Rayfield:Notify({
+                Title = "Blue Lock",
+                Content = "🎨 Style cambiato a: " .. Option,
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            Rayfield:Notify({
+                Title = "Errore",
+                Content = "❌ Style non trovato in ProfileStats!",
+                Duration = 5,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
+-- Button per mostrare style attuale
+OtherTab:CreateButton({
+    Name = "Show Current Style",
+    Callback = function()
+        local style = profileStats:FindFirstChild("Style")
+        if style then
+            local styleNames = {
+                [0] = "Default",
+                [1] = "Sae",
+                [2] = "NEL Isagi",
+                [3] = "Kaiser",
+                [4] = "Don Lorenzo",
+                [5] = "NEL Rin",
+                [6] = "Loki"
+            }
+            
+            local currentStyle = styleNames[style.Value] or "Sconosciuto"
+            print("Style attuale:", currentStyle, "- Valore:", style.Value)
+            
+            Rayfield:Notify({
+                Title = "Current Style",
+                Content = "🎨 Style attuale: " .. currentStyle,
+                Duration = 3,
+                Image = 4483362458
+            })
+        else
+            Rayfield:Notify({
+                Title = "Errore",
+                Content = "❌ Style non trovato!",
+                Duration = 3,
+                Image = 4483362458
+            })
+        end
+    end,
+})
+
 -- Sezione Utilità
 local UtilitySection = MainTab:CreateSection("🔧 Utility")
 
@@ -395,6 +526,40 @@ MainTab:CreateButton({
         Rayfield:Notify({
             Title = "Debug",
             Content = "🔍 Controlla la console per i dettagli",
+            Duration = 3,
+            Image = 4483362458
+        })
+    end,
+})
+
+-- Debug per Other tab
+OtherTab:CreateButton({
+    Name = "Debug Stamina & Style",
+    Callback = function()
+        print("=== DEBUG OTHER STATS ===")
+        if profileStats then
+            local stamina = profileStats:FindFirstChild("Stamina")
+            local style = profileStats:FindFirstChild("Style")
+            
+            if stamina then
+                print("- Stamina =", stamina.Value)
+            else
+                print("- Stamina: NON TROVATA")
+            end
+            
+            if style then
+                print("- Style =", style.Value)
+            else
+                print("- Style: NON TROVATA")
+            end
+        else
+            print("ProfileStats non trovato!")
+        end
+        print("=== END DEBUG ===")
+        
+        Rayfield:Notify({
+            Title = "Debug Other",
+            Content = "🔍 Controlla la console per Stamina & Style",
             Duration = 3,
             Image = 4483362458
         })
