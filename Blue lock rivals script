@@ -12,6 +12,7 @@ end
 
 local player = game.Players.LocalPlayer
 local profileStats = nil
+local playerStats = nil
 
 -- Aspetta ProfileStats con timeout
 local function waitForProfileStats()
@@ -35,7 +36,29 @@ local function waitForProfileStats()
     return true
 end
 
--- Carica ProfileStats
+-- Aspetta PlayerStats con timeout
+local function waitForPlayerStats()
+    local attempts = 0
+    local maxAttempts = 50
+    
+    while attempts < maxAttempts do
+        playerStats = player:FindFirstChild("PlayerStats")
+        if playerStats then
+            break
+        end
+        wait(0.1)
+        attempts = attempts + 1
+    end
+    
+    if not playerStats then
+        warn("PlayerStats non trovato dopo " .. maxAttempts .. " tentativi")
+        return false
+    end
+    
+    return true
+end
+
+-- Carica ProfileStats e PlayerStats
 if not waitForProfileStats() then
     -- Crea notifica di errore
     game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
@@ -47,10 +70,28 @@ if not waitForProfileStats() then
     return
 end
 
+if not waitForPlayerStats() then
+    -- Crea notifica di errore
+    game:GetService("StarterGui"):SetCore("ChatMakeSystemMessage", {
+        Text = "❌ ERRORE: PlayerStats non trovato!";
+        Color = Color3.fromRGB(255, 0, 0);
+        Font = Enum.Font.SourceSansBold;
+        FontSize = Enum.FontSize.Size18;
+    })
+    return
+end
+
 print("=== BLUE LOCK DEBUG ===")
 print("ProfileStats trovato:", profileStats:GetFullName())
+print("PlayerStats trovato:", playerStats:GetFullName())
 print("Contenuto di ProfileStats:")
 for _, child in ipairs(profileStats:GetChildren()) do
+    if child:IsA("IntValue") or child:IsA("NumberValue") then
+        print("-", child.Name, "=", child.Value)
+    end
+end
+print("Contenuto di PlayerStats:")
+for _, child in ipairs(playerStats:GetChildren()) do
     if child:IsA("IntValue") or child:IsA("NumberValue") then
         print("-", child.Name, "=", child.Value)
     end
@@ -61,7 +102,9 @@ print("=== END DEBUG ===")
 local originalValues = {
     Money = 0,
     Spins = 0,
-    FlowSpins = 0
+    FlowSpins = 0,
+    Stamina = 0,
+    Style = 0
 }
 
 -- Funzione per salvare i valori originali
@@ -69,12 +112,16 @@ local function saveOriginalValues()
     local money = profileStats:FindFirstChild("Money")
     local spins = profileStats:FindFirstChild("Spins")
     local flowSpins = profileStats:FindFirstChild("FlowSpins")
+    local stamina = playerStats:FindFirstChild("Stamina")
+    local style = playerStats:FindFirstChild("Style")
     
     if money then originalValues.Money = money.Value end
     if spins then originalValues.Spins = spins.Value end
     if flowSpins then originalValues.FlowSpins = flowSpins.Value end
+    if stamina then originalValues.Stamina = stamina.Value end
+    if style then originalValues.Style = style.Value end
     
-    print("Valori originali salvati:", originalValues.Money, originalValues.Spins, originalValues.FlowSpins)
+    print("Valori originali salvati:", originalValues.Money, originalValues.Spins, originalValues.FlowSpins, originalValues.Stamina, originalValues.Style)
 end
 
 -- Salva i valori all'avvio
@@ -318,8 +365,8 @@ OtherTab:CreateToggle({
         local staminaLoop = Value
         if Value then
             spawn(function()
-                while staminaLoop and profileStats do
-                    local stamina = profileStats:FindFirstChild("Stamina")
+                while staminaLoop and playerStats do
+                    local stamina = playerStats:FindFirstChild("Stamina")
                     if stamina then
                         stamina.Value = 999
                     end
@@ -333,9 +380,9 @@ OtherTab:CreateToggle({
                 Image = 4483362458
             })
         else
-            local stamina = profileStats:FindFirstChild("Stamina")
+            local stamina = playerStats:FindFirstChild("Stamina")
             if stamina then
-                stamina.Value = 100 -- Valore normale
+                stamina.Value = originalValues.Stamina
             end
             Rayfield:Notify({
                 Title = "Blue Lock",
@@ -357,7 +404,7 @@ OtherTab:CreateDropdown({
     CurrentOption = "Default",
     Flag = "StyleDropdown",
     Callback = function(Option)
-        local style = profileStats:FindFirstChild("Style")
+        local style = playerStats:FindFirstChild("Style")
         if style then
             local styleValue = 0
             
@@ -390,7 +437,7 @@ OtherTab:CreateDropdown({
         else
             Rayfield:Notify({
                 Title = "Errore",
-                Content = "❌ Style non trovato in ProfileStats!",
+                Content = "❌ Style non trovato in PlayerStats!",
                 Duration = 5,
                 Image = 4483362458
             })
@@ -402,7 +449,7 @@ OtherTab:CreateDropdown({
 OtherTab:CreateButton({
     Name = "Show Current Style",
     Callback = function()
-        local style = profileStats:FindFirstChild("Style")
+        local style = playerStats:FindFirstChild("Style")
         if style then
             local styleNames = {
                 [0] = "Default",
@@ -537,9 +584,9 @@ OtherTab:CreateButton({
     Name = "Debug Stamina & Style",
     Callback = function()
         print("=== DEBUG OTHER STATS ===")
-        if profileStats then
-            local stamina = profileStats:FindFirstChild("Stamina")
-            local style = profileStats:FindFirstChild("Style")
+        if playerStats then
+            local stamina = playerStats:FindFirstChild("Stamina")
+            local style = playerStats:FindFirstChild("Style")
             
             if stamina then
                 print("- Stamina =", stamina.Value)
@@ -553,7 +600,7 @@ OtherTab:CreateButton({
                 print("- Style: NON TROVATA")
             end
         else
-            print("ProfileStats non trovato!")
+            print("PlayerStats non trovato!")
         end
         print("=== END DEBUG ===")
         
